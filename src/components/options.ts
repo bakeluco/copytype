@@ -2,6 +2,7 @@ export class Optional<T> {
   private constructor(private value: T | null) { }
 
   static some<T>(value: T) {
+    if (value === undefined) return new Optional<T>(null);
     return new Optional(value);
   }
 

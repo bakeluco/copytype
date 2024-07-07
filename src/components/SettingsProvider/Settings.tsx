@@ -1,22 +1,25 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext } from "react";
-import { Optional } from "../options";
 
 // These settings should match JSON and backend
 export interface Settings {
   recentBooks: string[];
 }
 
+export const defaultSettings: Settings = {
+  recentBooks: [],
+};
+
 type SettingsContextType = {
-  settings: Optional<Settings>,
-  setSettings: (settings: Settings) => void,
-}
+  settings: Settings;
+  setSettings: (settings: Settings) => void;
+};
 
-export const SettingsContext = createContext<SettingsContextType>({ settings: Optional.none(), setSettings: () => { } });
-
+export const SettingsContext = createContext<SettingsContextType>({
+  settings: defaultSettings,
+  setSettings: () => {},
+});
 
 export const useSettings = () => {
   return useContext(SettingsContext);
 };
-
-

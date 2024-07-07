@@ -153,5 +153,11 @@ mod tests {
         let formatted_text = format_text(&text);
         assert_eq!(formatted_text, "Hello, World!\n");
     }
-}
 
+    #[test]
+    fn test_bom() {
+        let text = "\u{FEFF}Hello, World!";
+        let formatted_text = format_text(text);
+        assert_eq!(formatted_text, "Hello, World!");
+    }
+}

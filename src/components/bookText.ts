@@ -1,4 +1,4 @@
-import { RefObject, createRef } from "react";
+import { RefObject } from "react";
 
 /**
  * A class that represents the text of a book.
@@ -21,7 +21,6 @@ export class BookText {
    * The fence between current and next characters.
    */
   private charsDisplayed: number;
-
 
   constructor(text: string, charsTyped: number) {
     this.text = text;
@@ -47,7 +46,7 @@ export class BookText {
   }
 
   /**
-   * Gets new words to display, shifts the displayed words fence. 
+   * Gets new words to display, shifts the displayed words fence.
    * @param chars Number of characters to display. Length of words added <= chars
    * @returns New displayed words
    */
@@ -75,7 +74,8 @@ export class BookText {
     const words = this.text.split(" ");
     const displayedWords: string[] = [];
 
-    const needsMoreWords = () => displayedWords.join(" ").length + words[0].length < characters;
+    const needsMoreWords = () =>
+      displayedWords.join(" ").length + words[0].length < characters;
 
     while (words.length !== 0 && needsMoreWords()) {
       const word = words.shift()!;
@@ -91,31 +91,35 @@ export class BookText {
    * @returns The new displayed words and refs, and whether the display is still loading
    * (needed more words)
    */
-  updateDisplay(wordRefsGrid: RefObject<HTMLDivElement>[][]) {
-    const { lineIndex, wordIndex } = this.findOffScreenIndices(wordRefsGrid);
+  updateDisplay(wordsContainerRef: RefObject<HTMLDivElement>) {
+    const { lineIndex, wordIndex } =
+      this.findOffScreenIndices(wordsContainerRef);
 
     if (lineIndex === -1 && wordIndex === -1) {
       const displayedWords = this.getMoreChars(this.getDisplayedCharsLength());
 
-      const refs = this.createWordRefs(displayedWords);
-
       return {
         displayedWords,
-        refs,
         stillLoading: true,
       };
     }
 
     const displayedWords = this.getDisplayedWords();
-    const onScreenLines = displayedWords.split("\n").slice(0, lineIndex).join("\n");
-    const onScreenWords = displayedWords.split("\n")[lineIndex].split(" ").slice(0, wordIndex).join(" ");
+    const onScreenLines = displayedWords
+      .split("\n")
+      .slice(0, lineIndex)
+      .join("\n");
+    const onScreenWords = displayedWords
+      .split("\n")
+      [lineIndex].split(" ")
+      .slice(0, wordIndex)
+      .join(" ");
     const newDisplayedWords = (onScreenLines + "\n" + onScreenWords).trim();
 
-    this.charsDisplayed = this.charsTyped + newDisplayedWords.length;
+    this.charsDisplayed = this.charsTyped + newDisplayedWords.length - 1;
 
     return {
       displayedWords: this.getDisplayedWords(),
-      refs: this.createWordRefs(this.getDisplayedWords()),
       stillLoading: false,
     };
   }
@@ -125,17 +129,17 @@ export class BookText {
    * @param wordRefsGrid The grid of word refs
    * @returns The line index and word index of the first word that is off screen
    */
-  findOffScreenIndices(wordRefsGrid: RefObject<HTMLDivElement>[][]): {
+  findOffScreenIndices(wordsContainerRef: RefObject<HTMLDivElement>): {
     lineIndex: number;
     wordIndex: number;
   } {
-    for (let lineIndex = 0; lineIndex < wordRefsGrid.length; lineIndex++) {
-      const wordRefs = wordRefsGrid[lineIndex];
+    const lines = Array.from(wordsContainerRef.current!.children);
 
-      for (let wordIndex = 0; wordIndex < wordRefsGrid[lineIndex].length; wordIndex++) {
-        const word = wordRefs[wordIndex].current;
+    for (const [lineIndex, line] of lines.entries()) {
+      const words = Array.from(line.children);
 
-        if (word !== null && word.getBoundingClientRect().bottom > window.innerHeight) { // TODO: if this is too expensive, don't use linear search
+      for (const [wordIndex, word] of words.entries()) {
+        if (word.getBoundingClientRect().bottom > window.innerHeight) {
           return { lineIndex, wordIndex };
         }
       }
@@ -143,15 +147,18 @@ export class BookText {
 
     return { lineIndex: -1, wordIndex: -1 };
   }
-
-  /**
-   * Creates a grid of refs for the words in the text
-   * @param text The text to create refs for
-   * @returns The grid of word refs
-   */
-  createWordRefs(text: string) {
-    return text.split("\n").map(() => {
-      return text.split(" ").map(() => createRef<HTMLDivElement>());
-    });
-  }
 }
+
+/*
+
+line: [
+  word: {
+    wordRef: Ref
+    chars: [
+      charRef: Ref
+    ]
+  }
+]
+
+
+ */

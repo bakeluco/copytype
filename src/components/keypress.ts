@@ -8,7 +8,7 @@ export const handleKeyPress = (
   typedChars.push(e.key);
   
   console.log(typedChars.join(""));
-  setTypedChars(typedChars);
+  setTypedChars([...typedChars]);
 };
 
 export const handleKeyDown = (
@@ -19,9 +19,14 @@ export const handleKeyDown = (
   switch (e.key) {
     case "Backspace": {
       e.preventDefault();
-      typedChars.pop();
-      console.log(typedChars.join(""));
-      setTypedChars(typedChars);
+
+      if (isDeletingWord(e)) {
+        typedChars = deleteWord(typedChars);
+      } else {
+        typedChars.pop();
+      }
+
+      setTypedChars([...typedChars]);
       break;
     }
     case "Escape": {
@@ -30,9 +35,33 @@ export const handleKeyDown = (
     }
     case "Enter": {
       e.preventDefault();
+
       typedChars.push("\n");
-      console.log(typedChars.join(""));
-      setTypedChars(typedChars);
+      setTypedChars([...typedChars]);
     }
   }
+};
+
+const isDeletingWord = (e: KeyboardEvent) => {
+  if (window.navigator.platform.includes("Mac")) {
+    return e.altKey;
+  } else {
+    return e.ctrlKey;
+  }
+};
+
+const deleteWord = (typedChars: string[]) => {
+  let seenChar = false;
+
+  let i = typedChars.length - 1;
+  while (i > 0 && (!seenChar || typedChars[i] !== " ")) {
+    if (typedChars[i] !== " ") {
+      seenChar = true;
+    }
+
+    i--;
+  }
+
+  typedChars.splice(i);
+  return typedChars;
 };

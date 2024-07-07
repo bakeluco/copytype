@@ -1,15 +1,29 @@
-import { Ref, RefObject, forwardRef, useCallback, useEffect, useState } from "react";
-
+import {
+  Ref,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { handleKeyPress, handleKeyDown } from "../../components/keypress";
 import PageNavigators from "../../components/PageNavigators/PageNavigators";
 import { useSettings } from "../../components/SettingsProvider/Settings";
 import StatIndicators from "../../components/StatIndicators/StatIndicators";
-
-import styles from "./Typing.module.scss";
 import { useBackend } from "../../backends/BackendContext";
 import { BookText } from "../../components/bookText";
 import { Optional } from "../../components/options";
-import { handleKeyPress, handleKeyDown } from "../../components/keypress";
-const { wordsContainer, wordDiv, typingPage } = styles;
+import Caret from "../../components/Caret/Caret";
+
+import styles from "./Typing.module.scss";
+const {
+  wordsContainer,
+  wordDiv,
+  typingPage,
+  correctChar,
+  incorrectChar,
+  incorrectWord,
+} = styles;
 
 export const Typing = () => {
   const { settings } = useSettings();
@@ -20,16 +34,15 @@ export const Typing = () => {
 
   const [loadingPage, setLoadingPage] = useState(true);
   const [displayedWords, setDisplayedWords] = useState("");
-  const [wordRefsGrid, setWordRefsGrid] = useState<RefObject<HTMLDivElement>[][]>([]);
-
+  const wordsContainerRef = useRef<HTMLDivElement>(null);
 
   // fetch the book and initialize its handler
   useEffect(() => {
-    if (settings.isNone()) return;
-
     (async () => {
+      if (settings.recentBooks[0] === undefined) return;
+
       console.log("Fetching book...");
-      const fetchedBook = await backend.getBook(settings.unwrap().recentBooks[0]);
+      const fetchedBook = await backend.getBook(settings.recentBooks[0]);
 
       if (!fetchedBook.isSome()) {
         console.error("Failed to fetch book");
@@ -41,37 +54,32 @@ export const Typing = () => {
 
       setBookText(Optional.some(newText));
       setDisplayedWords(newText.getDisplayedWords());
-
-      const refs = newText.createWordRefs(newText.getDisplayedWords());
-      setWordRefsGrid(refs);
     })();
   }, [backend, settings]);
 
-
   // ensure window has a full page of words, with no overflow
   const initWindow = useCallback(() => {
+    if (wordsContainerRef.current === null) return;
+
     if (bookText.isNone() || loadingPage === false) return;
 
-    const { displayedWords, refs, stillLoading } = bookText.unwrap().updateDisplay(wordRefsGrid);
+    const { displayedWords, stillLoading } = bookText
+      .unwrap()
+      .updateDisplay(wordsContainerRef);
+    console.log(stillLoading);
+    console.log(displayedWords);
 
     setLoadingPage(stillLoading);
     setDisplayedWords(displayedWords);
-    setWordRefsGrid(refs);
-  }, [wordRefsGrid, bookText, loadingPage]);
+  }, [bookText, loadingPage, wordsContainerRef]);
 
   // initialize window and add resize listener
   useEffect(() => {
-
-    // debounce resize event because initWindow is fairly expensive
-    let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-
-      resizeTimeout = setTimeout(() => {
-        setLoadingPage(true);
-        initWindow();
-      }, 50);
+      setLoadingPage(true);
+      initWindow();
     };
+
     initWindow();
 
     // add resize listener
@@ -80,15 +88,15 @@ export const Typing = () => {
     // cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
-      if (resizeTimeout) clearTimeout(resizeTimeout);
     };
   }, [initWindow]);
 
-
   // handle keypresses
   useEffect(() => {
-    const keypress = (e: KeyboardEvent) => handleKeyPress(e, typedChars, setTypedChars);
-    const keydown = (e: KeyboardEvent) => handleKeyDown(e, typedChars, setTypedChars);
+    const keypress = (e: KeyboardEvent) =>
+      handleKeyPress(e, typedChars, setTypedChars);
+    const keydown = (e: KeyboardEvent) =>
+      handleKeyDown(e, typedChars, setTypedChars);
 
     window.addEventListener("keypress", keypress);
     window.addEventListener("keydown", keydown);
@@ -99,69 +107,135 @@ export const Typing = () => {
     };
   }, [typedChars]);
 
-
   return (
     <div className={typingPage}>
       <PageNavigators />
       <StatIndicators />
 
-      {bookText.isSome() &&
-        <WordsContainer text={displayedWords} wordRefsGrid={wordRefsGrid} />
-      }
+      {bookText.isSome() && (
+        <>
+          <WordsContainer
+            text={displayedWords}
+            typedChars={typedChars}
+            ref={wordsContainerRef}
+          />
+          <Caret
+            wordsContainerRef={wordsContainerRef}
+            typedChars={typedChars}
+          />
+        </>
+      )}
     </div>
   );
 };
 
-const WordsContainer = ({ wordRefsGrid, text }: {
-  wordRefsGrid: RefObject<HTMLDivElement>[][];
-  text: string;
-}) => {
-  const lines = text.split("\n");
+const WordsContainer = forwardRef(
+  (
+    {
+      text,
+      typedChars,
+    }: {
+      text: string;
+      typedChars: string[];
+    },
+    ref: Ref<HTMLDivElement>,
+  ) => {
+    const lines = text.split("\n");
+    const typedLines = typedChars.join("").split("\n");
 
-  return (
-    <div className={wordsContainer}>
-      {lines.map((line, index) => {
-        const words = line.split(" ");
-        const wordRefs = wordRefsGrid[index];
+    return (
+      <div className={wordsContainer} ref={ref}>
+        {lines.map((line, index) => {
+          const words = line.split(" ");
+          const typedWords = Optional.some(typedLines[index]);
 
-        return (
-          <Line key={index} words={words} wordRefs={wordRefs} />
-        );
-      })}
-    </div>
-  );
-};
+          return <Line key={index} words={words} typedWords={typedWords} />;
+        })}
+      </div>
+    );
+  },
+);
 
-const Line = ({ wordRefs, words }: {
-  wordRefs: RefObject<HTMLDivElement>[];
+const Line = ({
+  words,
+  typedWords,
+}: {
   words: string[];
+  typedWords: Optional<string>;
 }) => {
+  let typedWordsSplit = Optional.none<string[]>();
+  if (typedWords.isSome()) {
+    typedWordsSplit = Optional.some(typedWords.unwrap().split(" "));
+  }
+
   return (
     <div>
       {words.map((word, index) => {
+        let typedWord = Optional.none<string>();
+        let wordClass = "";
+
+        if (typedWordsSplit.isSome()) {
+          typedWord = Optional.some(typedWordsSplit.unwrap()[index]);
+
+          if (
+            typedWord.isSome() &&
+            index !== typedWordsSplit.unwrap().length - 1 &&
+            typedWord.unwrap() !== word
+          ) {
+            wordClass = incorrectWord;
+          }
+        }
+
         return (
-          <Word key={index} word={word} ref={wordRefs[index]} />
+          <Word
+            key={index}
+            word={word}
+            typedWord={typedWord}
+            className={wordClass}
+          />
         );
       })}
     </div>
   );
 };
 
-const Word = forwardRef(({ word }: {
-  word: string
-}, ref: Ref<HTMLDivElement>) => {
+const Word = ({
+  word,
+  typedWord,
+  className,
+}: {
+  word: string;
+  typedWord: Optional<string>;
+  className: string;
+}) => {
   const characters = word.split("");
 
+  let typedChars = Optional.none<string[]>();
+  if (typedWord.isSome()) {
+    typedChars = Optional.some(typedWord.unwrap().split(""));
+  }
+
+  const classes = [wordDiv, className].join(" ");
+
   return (
-    <div className={wordDiv} ref={ref}>
+    <div className={classes}>
       {characters.map((character, index) => {
+        let charClass = "";
+        if (typedChars.isSome()) {
+          const typedChar = Optional.some(typedChars.unwrap()[index]);
+
+          if (typedChar.isSome()) {
+            charClass =
+              typedChar.unwrap() === character ? correctChar : incorrectChar;
+          }
+        }
+
         return (
-          <span key={index}>
+          <span key={index} className={charClass}>
             {character}
           </span>
         );
       })}
     </div>
   );
-});
-
+};

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Settings, SettingsContext } from "./Settings";
+import { Settings, SettingsContext, defaultSettings } from "./Settings";
 import { useBackend } from "../../backends/BackendContext";
 import { Optional } from "../options";
 
@@ -9,19 +9,21 @@ export interface SettingsProviderProps {
 }
 
 const SettingsProvider = ({ children }: SettingsProviderProps) => {
-  const [settings, setSettingsState] = useState(Optional.none<Settings>());
+  const [settings, setSettingsState] = useState(defaultSettings);
   const { backend } = useBackend();
 
   useEffect(() => {
     (async () => {
       const fetchedSettings: Optional<Settings> = await backend.getSettings();
-      setSettingsState(fetchedSettings);
+      if (fetchedSettings.isNone()) return;
+
+      setSettingsState(fetchedSettings.unwrap());
     })();
   }, [backend]);
 
   const setSettings = async (newSettings: Settings) => {
     backend.setSettings(newSettings);
-    setSettingsState(Optional.some(newSettings));
+    setSettingsState(newSettings);
   };
 
   return (

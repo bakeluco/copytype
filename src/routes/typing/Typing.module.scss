@@ -4,7 +4,11 @@
 
 .wordDiv {
   display: inline-block;
-  margin: 0 5px;
+  /* margin was originally 0.57rem here */
+  margin: calc(var(--font-size) * 0.57 / 2.3);
+  line-height: 1;
+  /* originally 3px */
+  border-bottom: calc(var(--font-size) * (3/16) / 2.3) solid transparent;
   color: var(--sub-color);
 }
 
@@ -15,8 +19,23 @@
   height: calc(100vh - 74px - 5rem);
 }
 
-.virtuoso {
-  // scrolling down has no whitespace... 
-  // have to figure out how to allow scrolling past the last word, since part of the div is offscreen now.
-  // height: 2vh;
+.correctChar {
+  color: var(--text-color);
+}
+
+.incorrectChar {
+  color: var(--error-color);
+  position: relative;
+}
+
+
+.incorrectWord {
+  /* bottom border was originally 3px */
+  border-bottom: calc(var(--font-size) * (3/16) / 2.3) solid var(--error-color) !important;
+  --shadow-size: calc(var(--font-size) * 2 / 16 / 2.3);
+  /* originally 2px */
+  text-shadow: var(--shadow-size) 0 0 var(--bg-color),
+    calc(var(--shadow-size) * -1) 0 0 var(--bg-color), 0 var(--shadow-size) 0 var(--bg-color),
+    var(--shadow-size) var(--shadow-size) 0 var(--bg-color),
+    calc(var(--shadow-size) * -1) var(--shadow-size) 0 var(--bg-color);
 }

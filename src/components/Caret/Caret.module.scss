@@ -1,0 +1,33 @@
+.caret {
+    height: 2.9rem;
+    background: var(--caret-color);
+    position: absolute;
+    width: 3.625px;
+    border-radius: 0.25rem;
+    transform-origin: top left;
+    transition-duration: 0.1s;
+    left: 0;
+    top: 0;
+    transform: translate3d(0,0,0);
+    -webkit-transform: translate3d(0,0,0);
+    will-change: transform;
+}
+
+.animateCaret {
+    animation-name: caretFlashSmooth;
+    animation-iteration-count: infinite;
+    animation-duration: 1s;
+}
+
+@keyframes caretFlashSmooth {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
