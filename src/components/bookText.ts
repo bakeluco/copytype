@@ -109,9 +109,17 @@ export class BookText {
       .split("\n")
       .slice(0, lineIndex)
       .join("\n");
+
+    if (lineIndex > displayedWords.split("\n").length - 1) {
+      return {
+        displayedWords: this.getMoreChars(this.getDisplayedCharsLength()),
+        stillLoading: true,
+      };
+    }
+
     const onScreenWords = displayedWords
       .split("\n")
-      [lineIndex].split(" ")
+    [lineIndex].split(" ")
       .slice(0, wordIndex)
       .join(" ");
     const newDisplayedWords = (onScreenLines + "\n" + onScreenWords).trim();
@@ -148,17 +156,3 @@ export class BookText {
     return { lineIndex: -1, wordIndex: -1 };
   }
 }
-
-/*
-
-line: [
-  word: {
-    wordRef: Ref
-    chars: [
-      charRef: Ref
-    ]
-  }
-]
-
-
- */
