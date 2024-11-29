@@ -1,12 +1,12 @@
-import { ForwardedRef, forwardRef, useEffect } from "react";
+import { ForwardedRef, forwardRef } from "react";
 import { Optional } from "../options";
 import styles from "./WordsContainer.module.scss";
 import { BookText } from "../bookText";
 import usePageSizing from "../hooks/usePageSizing";
 import useForwardRef from "../hooks/useForwardRef";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleDown, faArrowTurnDown, faLevelDownAlt, faTurnDown } from "@fortawesome/free-solid-svg-icons";
-const { wordsContainer, wordDiv, correctChar, incorrectChar, incorrectWord, nlChar } = styles;
+import { faTurnDown } from "@fortawesome/free-solid-svg-icons";
+const { wordsContainer, wordDiv, correctChar, incorrectChar, nlChar, incorrectWord } = styles;
 
 const WordsContainer = forwardRef((
   {
@@ -28,9 +28,15 @@ const WordsContainer = forwardRef((
     <div className={wordsContainer} ref={forwardRef}>
       {words.map((word, index) => {
         const lastLetter = word[word.length - 1];
+
+        let wordClass = "";
+        if (isWordWrong(word, index, typedWords)) {
+          wordClass = incorrectWord;
+        }
+
         return (
           <>
-            <Word key={index} word={word} typedWord={Optional.some(typedWords[index])} />
+            <Word key={index} word={word} typedWord={Optional.some(typedWords[index])} className={wordClass} />
             {lastLetter === "\n" && <br />}
           </>
         );
@@ -39,35 +45,10 @@ const WordsContainer = forwardRef((
   );
 });
 
-// const Line = ({ words, typedWords }: { words: string[]; typedWords: Optional<string> }) => {
-//   let typedWordsSplit = Optional.none<string[]>();
-//   if (typedWords.isSome()) {
-//     typedWordsSplit = Optional.some(typedWords.unwrap().split(" "));
-//   }
-//
-//
-//   return (
-//     <div>
-//       {words.map((word, index) => {
-//         let typedWord = Optional.none<string>();
-//         let wordClass = "";
-//
-//         if (typedWordsSplit.isSome()) {
-//           typedWord = Optional.some(typedWordsSplit.unwrap()[index]);
-//
-//           if (typedWord.isSome()
-//             && typedWord.unwrap() !== word
-//             && index !== typedWordsSplit.unwrap().length - 1) {
-//
-//             wordClass = incorrectWord;
-//           }
-//         }
-//
-//         return <Word key={index} word={word} typedWord={typedWord} className={wordClass} />;
-//       })}
-//     </div>
-//   );
-// };
+const isWordWrong = (word: string, index: number, typedWords: string[]): boolean => {
+  const typedWord = Optional.some(typedWords[index]);
+  return typedWord.isSome() && typedWord.unwrap() !== word && index !== typedWords.length - 1;
+};
 
 const Word = ({ word, typedWord, className }: { word: string; typedWord: Optional<string>; className?: string }) => {
   const characters = word.split("");

@@ -92,10 +92,11 @@ export class BookText {
    * (needed more words)
    */
   updateDisplay(wordsContainerRef: RefObject<HTMLDivElement>) {
-    const { lineIndex, wordIndex } =
-      this.findOffScreenIndices(wordsContainerRef);
+    // get the index of the first word that is off screen
+    const wordIndex = this.findOffScreenWord(wordsContainerRef);
 
-    if (lineIndex === -1 && wordIndex === -1) {
+    // if one wasn't found, we need more words!
+    if (wordIndex === -1) {
       const displayedWords = this.getMoreChars(this.getDisplayedCharsLength());
 
       return {
@@ -104,27 +105,23 @@ export class BookText {
       };
     }
 
+    // slice displayed words to only on-screen ones.
     const displayedWords = this.getDisplayedWords();
-    const onScreenLines = displayedWords
-      .split("\n")
-      .slice(0, lineIndex)
-      .join("\n");
+    const onScreenWords = displayedWords
+      .split(" ")
+      .slice(0, wordIndex)
+      .join(" ");
 
-    if (lineIndex > displayedWords.split("\n").length - 1) {
+    // if we've reached the end of our displayed words, we might need more
+    if (wordIndex > displayedWords.split(" ").length - 1) {
       return {
         displayedWords: this.getMoreChars(this.getDisplayedCharsLength()),
         stillLoading: true,
       };
     }
 
-    const onScreenWords = displayedWords
-      .split("\n")
-    [lineIndex].split(" ")
-      .slice(0, wordIndex)
-      .join(" ");
-    const newDisplayedWords = (onScreenLines + "\n" + onScreenWords).trim();
-
-    this.charsDisplayed = this.charsTyped + newDisplayedWords.length - 1;
+    // adjust the chars dispalyed fence
+    this.charsDisplayed = this.charsTyped + onScreenWords.length - 1;
 
     return {
       displayedWords: this.getDisplayedWords(),
@@ -133,26 +130,20 @@ export class BookText {
   }
 
   /**
-   * Find the indices of the first word that is off screen
+   * Find the index of the first word that is off screen
    * @param wordRefsGrid The grid of word refs
-   * @returns The line index and word index of the first word that is off screen
+   * @returns The index of the first word that is off screen
    */
-  findOffScreenIndices(wordsContainerRef: RefObject<HTMLDivElement>): {
-    lineIndex: number;
-    wordIndex: number;
-  } {
-    const lines = Array.from(wordsContainerRef.current!.children);
+  findOffScreenWord(wordsContainerRef: RefObject<HTMLDivElement>): number {
+    // get the real word elements
+    const words = Array.from(wordsContainerRef.current!.children).filter(element => element.tagName != "BR");
 
-    for (const [lineIndex, line] of lines.entries()) {
-      const words = Array.from(line.children);
-
-      for (const [wordIndex, word] of words.entries()) {
-        if (word.getBoundingClientRect().bottom > window.innerHeight) {
-          return { lineIndex, wordIndex };
-        }
+    for (const [wordIndex, word] of words.entries()) {
+      if (word.getBoundingClientRect().bottom > window.innerHeight) {
+        return wordIndex;
       }
     }
 
-    return { lineIndex: -1, wordIndex: -1 };
+    return -1;
   }
 }

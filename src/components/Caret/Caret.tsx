@@ -9,6 +9,7 @@ const Caret = ({
   typedChars: string[];
   wordsContainerRef: RefObject<HTMLDivElement>;
 }) => {
+
   const [style, setStyle] = useState<CSSProperties>({
     transform: "translate(-999px, -999px)",
     display: "none"
@@ -60,7 +61,7 @@ const getCaretPosition = (
     };
   }
 
-  const lines = Array.from(wordsContainerRef.current.children);
+  const words = Array.from(wordsContainerRef.current.children).filter(element => element.tagName != "BR");
 
 
   // Return the position of a given letter element, with offsets provided
@@ -77,7 +78,6 @@ const getCaretPosition = (
 
   // Return the position of the last letter of the given line, word, or letter
   const getPositionOfLastLetter = ({
-    line,
     word,
     letter,
     caretWidth
@@ -89,28 +89,19 @@ const getCaretPosition = (
   }) => {
 
     // defaults
-    line = line || getLastElement(lines);
-    word = word || getLastElement(Array.from(line.children));
+    word = word || getLastElement(words);
     letter = letter || getLastElement(Array.from(word.children));
     caretWidth = caretWidth || caretRef.current!.getBoundingClientRect().width;
 
     return getPositionOfLetter(letter, caretWidth);
   };
 
-  const typedLines = typedChars.join("").split("\n");
-  const lastTypedLine = typedLines[typedLines.length - 1];
-  const typedWords = lastTypedLine.split(" ");
-
-  // Get the last line div that has been typed.
-  const lastLineElement = lines[typedLines.length - 1];
-  if (!lastLineElement) {
-    return getPositionOfLastLetter({});
-  }
+  const typedWords = typedChars.join("").split(" ");
 
   // Get the span of the last typed word.
-  const lastWordElement = Array.from(lastLineElement.children)[typedWords.length - 1];
+  const lastWordElement = words[typedWords.length - 1];
   if (!lastWordElement) {
-    return getPositionOfLastLetter({ line: lastLineElement });
+    return getPositionOfLastLetter({});
   }
 
   // Get the last typed word

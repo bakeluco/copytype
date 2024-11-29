@@ -3,7 +3,7 @@ import PageNavigators from "../../components/PageNavigators/PageNavigators";
 import { useSettings } from "../../components/SettingsProvider/Settings";
 import StatIndicators from "../../components/StatIndicators/StatIndicators";
 import { useBackend } from "../../backends/BackendContext";
-// import Caret from "../../components/Caret/Caret";
+import Caret from "../../components/Caret/Caret";
 import WordsContainer from "../../components/WordsContainer/WordsContainer";
 
 import styles from "./Typing.module.scss";
@@ -29,11 +29,11 @@ export const Typing = () => {
       {bookText.isSome() && (
         <>
           <WordsContainer bookText={bookText.unwrap()} typedChars={typedChars} ref={wordsContainerRef} />
+          <Caret wordsContainerRef={wordsContainerRef} typedChars={typedChars} />
         </>
       )}
     </div>
   );
 };
 
-// <Caret wordsContainerRef={wordsContainerRef} typedChars={typedChars} />
 

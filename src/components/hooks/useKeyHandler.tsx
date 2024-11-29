@@ -76,8 +76,13 @@ const deleteWord = (typedChars: string[]) => {
   let seenChar = false;
 
   let i = typedChars.length - 1;
-  while (i > 0 && (!seenChar || typedChars[i - 1] !== " ")) {
-    if (typedChars[i] !== " ") {
+  while (
+    i > 0 && (
+      !seenChar ||
+      !([" ", "\n "].includes(typedChars[i - 1]))
+    )
+  ) {
+    if (!([" ", "\n "].includes(typedChars[i]))) {
       seenChar = true;
     }
 
