@@ -28,11 +28,12 @@ pub fn format_text(text: &str) -> String {
     let mut new_text = INVISIBLE_CHARS.replace_all(text, " ").to_string();
     new_text = CARRIAGE_RETURN.replace_all(&new_text, "\n").to_string();
     new_text = LEADING_WHITESPACE.replace_all(&new_text, "").to_string();
-    new_text = TRAILING_WHITESPACE.replace_all(&new_text, "").to_string();
     new_text = MULTI_SPACE.replace_all(&new_text, " ").to_string();
     new_text = SPACE_NEWLINE.replace_all(&new_text, "\n").to_string();
     new_text = NEWLINE_SPACE.replace_all(&new_text, "\n").to_string();
     new_text = MULTI_NEWLINE.replace_all(&new_text, "\n").to_string();
+    new_text = new_text.replace("\n", "\n ");
+    new_text = TRAILING_WHITESPACE.replace_all(&new_text, "").to_string();
 
     new_text.to_string()
 }
@@ -45,4 +46,3 @@ pub fn parse_html(html: &str) -> String {
         .text()
         .collect()
 }
-

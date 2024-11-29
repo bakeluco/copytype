@@ -58,7 +58,7 @@ export const handleKeyDown = (
     case "Enter": {
       e.preventDefault();
 
-      typedChars.push("\n");
+      typedChars.push("\n ");
       setTypedChars([...typedChars]);
     }
   }

@@ -6,7 +6,8 @@ use std::{
 use epub::doc::{DocError, EpubDoc};
 use mobi::{Mobi, MobiError};
 use serde::{Deserialize, Serialize};
-use tauri::{api::dialog, AppHandle};
+use tauri::{App, AppHandle};
+use tauri_plugin_dialog::{DialogExt, FilePath};
 
 use crate::{
     dirs,
@@ -129,10 +130,12 @@ impl Book {
     }
 }
 
-pub fn pick_ebook_file() -> Option<PathBuf> {
+pub fn pick_ebook_file(app_handler: &AppHandle) -> Option<FilePath> {
     // needs a channel because pick_file is non-blocking
     let (tx, rx) = std::sync::mpsc::channel();
-    dialog::FileDialogBuilder::new()
+    app_handler
+        .dialog()
+        .file()
         .set_title("Upload Book")
         .add_filter("eBooks", &["txt", "epub", "mobi"])
         .pick_file(move |path| {

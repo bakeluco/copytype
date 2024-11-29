@@ -2,7 +2,7 @@ import { Optional } from '../components/options';
 import { Settings } from '../components/SettingsProvider/Settings';
 import { Book, Metadata } from '../routes/library/book';
 import { Backend } from './backends';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 
 interface ErrorData {
   message: string,

@@ -13,7 +13,7 @@ mod tests {
     fn test_invisible_chars() {
         let text = "Hello,\t\r\0World";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello,\nWorld");
+        assert_eq!(formatted_text, "Hello,\n World");
     }
 
     #[test]
@@ -34,14 +34,14 @@ mod tests {
     fn test_multiple_newlines() {
         let text = "Hello,\n\nWorld!";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello,\nWorld!");
+        assert_eq!(formatted_text, "Hello,\n World!");
     }
 
     #[test]
     fn test_space_newline() {
         let text = "Hello, \nWorld!";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello,\nWorld!");
+        assert_eq!(formatted_text, "Hello,\n World!");
     }
 
     #[test]
@@ -55,7 +55,7 @@ mod tests {
     fn copilots_test2() {
         let text = "\n\nHello\n\nWorld\n\n";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello\nWorld\n");
+        assert_eq!(formatted_text, "Hello\n World\n");
     }
 
     #[test]
@@ -69,21 +69,21 @@ mod tests {
     fn copilots_test4() {
         let text = "Hello\r\nWorld";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello\nWorld");
+        assert_eq!(formatted_text, "Hello\n World");
     }
 
     #[test]
     fn copilots_test5() {
         let text = "  Hello\n\n\nWorld  ";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello\nWorld");
+        assert_eq!(formatted_text, "Hello\n World");
     }
 
     #[test]
     fn copilots_test6() {
         let text = "Hello  \n  World";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello\nWorld");
+        assert_eq!(formatted_text, "Hello\n World");
     }
 
     #[test]
@@ -97,7 +97,7 @@ mod tests {
     fn copilots_test8() {
         let text = "Hello\rWorld";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello\nWorld");
+        assert_eq!(formatted_text, "Hello\n World");
     }
 
     #[test]
@@ -118,7 +118,7 @@ mod tests {
     fn test_awful_string1() {
         let text = "  \n\n Hello,\t\r\0World  \n  \n\n";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello,\nWorld\n");
+        assert_eq!(formatted_text, "Hello,\n World\n");
     }
 
     #[test]
@@ -132,7 +132,7 @@ mod tests {
     fn generated_test2() {
         let text = " \n\u{0001}Hello,\u{0000}  \r\r\n\u{0000}\u{0000} \u{0002} World\n\u{0001}\u{0000}  \u{0000}\u{0002}";
         let formatted_text = format_text(text);
-        assert_eq!(formatted_text, "Hello,\nWorld\n");
+        assert_eq!(formatted_text, "Hello,\n World\n");
     }
 
     #[test]

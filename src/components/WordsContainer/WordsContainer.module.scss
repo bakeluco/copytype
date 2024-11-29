@@ -32,3 +32,9 @@
     var(--shadow-size) var(--shadow-size) 0 var(--bg-color),
     calc(var(--shadow-size) * -1) var(--shadow-size) 0 var(--bg-color);
 }
+
+.nlChar {
+    display: inline-block;
+    margin: 0 .5rem;
+    opacity: .2;
+}

@@ -4,7 +4,9 @@ import styles from "./WordsContainer.module.scss";
 import { BookText } from "../bookText";
 import usePageSizing from "../hooks/usePageSizing";
 import useForwardRef from "../hooks/useForwardRef";
-const { wordsContainer, wordDiv, correctChar, incorrectChar, incorrectWord } = styles;
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAngleDown, faArrowTurnDown, faLevelDownAlt, faTurnDown } from "@fortawesome/free-solid-svg-icons";
+const { wordsContainer, wordDiv, correctChar, incorrectChar, incorrectWord, nlChar } = styles;
 
 const WordsContainer = forwardRef((
   {
@@ -16,55 +18,58 @@ const WordsContainer = forwardRef((
   }, ref: ForwardedRef<HTMLDivElement>
 ) => {
   const forwardRef = useForwardRef(ref);
-  const text = bookText.getDisplayedWords().replaceAll("\n", "\n "); // usePageSizing(bookText, forwardRef);
 
-  const lines = text.split("\n");
-  const typedLines = typedChars.join("").split("\n");
+  const text = usePageSizing(bookText, forwardRef);
 
+  const words = text.split(" ");
+  const typedWords = typedChars.join("").split(" ");
 
   return (
     <div className={wordsContainer} ref={forwardRef}>
-      {lines.map((line, index) => {
-        const words = line.split(" ");
-        const typedWords = Optional.some(typedLines[index]);
-
-        return <Line key={index} words={words} typedWords={typedWords} />;
+      {words.map((word, index) => {
+        const lastLetter = word[word.length - 1];
+        return (
+          <>
+            <Word key={index} word={word} typedWord={Optional.some(typedWords[index])} />
+            {lastLetter === "\n" && <br />}
+          </>
+        );
       })}
     </div>
   );
 });
 
-const Line = ({ words, typedWords }: { words: string[]; typedWords: Optional<string> }) => {
-  let typedWordsSplit = Optional.none<string[]>();
-  if (typedWords.isSome()) {
-    typedWordsSplit = Optional.some(typedWords.unwrap().split(" "));
-  }
+// const Line = ({ words, typedWords }: { words: string[]; typedWords: Optional<string> }) => {
+//   let typedWordsSplit = Optional.none<string[]>();
+//   if (typedWords.isSome()) {
+//     typedWordsSplit = Optional.some(typedWords.unwrap().split(" "));
+//   }
+//
+//
+//   return (
+//     <div>
+//       {words.map((word, index) => {
+//         let typedWord = Optional.none<string>();
+//         let wordClass = "";
+//
+//         if (typedWordsSplit.isSome()) {
+//           typedWord = Optional.some(typedWordsSplit.unwrap()[index]);
+//
+//           if (typedWord.isSome()
+//             && typedWord.unwrap() !== word
+//             && index !== typedWordsSplit.unwrap().length - 1) {
+//
+//             wordClass = incorrectWord;
+//           }
+//         }
+//
+//         return <Word key={index} word={word} typedWord={typedWord} className={wordClass} />;
+//       })}
+//     </div>
+//   );
+// };
 
-
-  return (
-    <div>
-      {words.map((word, index) => {
-        let typedWord = Optional.none<string>();
-        let wordClass = "";
-
-        if (typedWordsSplit.isSome()) {
-          typedWord = Optional.some(typedWordsSplit.unwrap()[index]);
-
-          if (typedWord.isSome()
-            && typedWord.unwrap() !== word
-            && index !== typedWordsSplit.unwrap().length - 1) {
-
-            wordClass = incorrectWord;
-          }
-        }
-
-        return <Word key={index} word={word} typedWord={typedWord} className={wordClass} />;
-      })}
-    </div>
-  );
-};
-
-const Word = ({ word, typedWord, className }: { word: string; typedWord: Optional<string>; className: string }) => {
+const Word = ({ word, typedWord, className }: { word: string; typedWord: Optional<string>; className?: string }) => {
   const characters = word.split("");
   let extraChars: string[] = [];
 
@@ -89,11 +94,15 @@ const Word = ({ word, typedWord, className }: { word: string; typedWord: Optiona
           }
         }
 
-        return (
-          <span key={index} className={charClass}>
+        if (character === "\n") {
+          return <div className={charClass + " " + nlChar} key={index}>
+            <FontAwesomeIcon icon={faTurnDown} transform={{ rotate: 90 }} />
+          </div>;
+        } else {
+          return <span key={index} className={charClass}>
             {character}
-          </span>
-        );
+          </span>;
+        }
       })}
 
       {extraChars.map((char, index) => (
