@@ -8,7 +8,6 @@ const useForwardRef = <T,>(
   const targetRef = useRef<T>(initialValue);
 
   useEffect(() => {
-    console.log(ref);
     if (!ref) return;
 
     if (typeof ref === 'function') {

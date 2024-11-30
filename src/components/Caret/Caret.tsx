@@ -1,14 +1,14 @@
 import { CSSProperties, RefObject, useEffect, useRef, useState } from "react";
 import styles from "./Caret.module.scss";
+import { useStore } from "../state/useStore";
 const { caret, animateCaret } = styles;
 
 const Caret = ({
-  typedChars,
   wordsContainerRef,
 }: {
-  typedChars: string[];
   wordsContainerRef: RefObject<HTMLDivElement>;
 }) => {
+  const { typedChars } = useStore();
 
   const [style, setStyle] = useState<CSSProperties>({
     transform: "translate(-999px, -999px)",

@@ -19,7 +19,7 @@ export const Typing = () => {
   const wordsContainerRef = useRef<HTMLDivElement>(null);
 
   const bookText = useBookText(backend, settings);
-  const typedChars = useKeyHandler();
+  useKeyHandler();
 
   return (
     <div className={typingPage}>
@@ -28,8 +28,8 @@ export const Typing = () => {
 
       {bookText.isSome() && (
         <>
-          <WordsContainer bookText={bookText.unwrap()} typedChars={typedChars} ref={wordsContainerRef} />
-          <Caret wordsContainerRef={wordsContainerRef} typedChars={typedChars} />
+          <WordsContainer bookText={bookText.unwrap()} ref={wordsContainerRef} />
+          <Caret wordsContainerRef={wordsContainerRef} />
         </>
       )}
     </div>

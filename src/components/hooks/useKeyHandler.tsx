@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useStore } from "../state/useStore";
 
 const useKeyHandler = () => {
-  const [typedChars, setTypedChars] = useState<string[]>([]);
+  const { typedChars, setTypedChars } = useStore();
 
   useEffect(() => {
     const keypress = (e: KeyboardEvent) => handleKeyPress(e, typedChars, setTypedChars);
@@ -14,9 +15,7 @@ const useKeyHandler = () => {
       window.removeEventListener("keypress", keypress);
       window.removeEventListener("keydown", keydown);
     };
-  }, [typedChars]);
-
-  return typedChars;
+  }, [typedChars, setTypedChars]);
 };
 
 
@@ -26,10 +25,8 @@ export const handleKeyPress = (
   setTypedChars: (typedChars: string[]) => void
 ) => {
   e.preventDefault();
-  console.log(e);
   typedChars.push(e.key);
 
-  console.log(typedChars.join(""));
   setTypedChars([...typedChars]);
 };
 
@@ -72,24 +69,26 @@ const isDeletingWord = (e: KeyboardEvent) => {
   }
 };
 
-const deleteWord = (typedChars: string[]) => {
+export const deleteWord = (typedChars: string[]) => {
+  let i = typedChars.length - 1;
   let seenChar = false;
 
-  let i = typedChars.length - 1;
-  while (
-    i > 0 && (
-      !seenChar ||
-      !([" ", "\n "].includes(typedChars[i - 1]))
-    )
-  ) {
-    if (!([" ", "\n "].includes(typedChars[i]))) {
+  while (i >= 0) {
+    const currentChar = typedChars[i];
+    const isWhitespace = currentChar === " " || currentChar === "\n ";
+
+    if (seenChar && isWhitespace) {
+      break;
+    }
+
+    if (!isWhitespace) {
       seenChar = true;
     }
 
     i--;
   }
 
-  typedChars.splice(i);
+  typedChars.splice(i + 1);
   return typedChars;
 };
 

@@ -1,10 +1,13 @@
 import { RefObject, useCallback, useEffect, useState } from "react";
 import { BookText } from "../bookText";
+import { useStore } from "../state/useStore";
 
 const usePageSizing = (bookText: BookText, ref: RefObject<HTMLDivElement>) => {
   const [loadingPage, setLoadingPage] = useState(true);
   const [displayedWords, setDisplayedWords] = useState(bookText.getDisplayedWords());
+  const { typedChars, setTypedChars } = useStore();
 
+  const wordsTyped = typedChars.join("").split(" ").length;
 
   // ensure window has a full page of words, with no overflow
   const initWindow = useCallback(() => {
@@ -38,6 +41,16 @@ const usePageSizing = (bookText: BookText, ref: RefObject<HTMLDivElement>) => {
       window.removeEventListener("resize", handleResize);
     };
   }, [initWindow, bookText, loadingPage, displayedWords]);
+
+  // gets the next page of text if you've typed a whole page
+  useEffect(() => {
+    const pageLength = bookText.getDisplayedWords().split(" ").length;
+    if (wordsTyped > pageLength) {
+      bookText.nextPage();
+      setLoadingPage(true);
+      setTypedChars([]);
+    }
+  }, [initWindow, bookText, wordsTyped, setTypedChars]);
 
   return displayedWords;
 };

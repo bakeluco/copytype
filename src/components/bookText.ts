@@ -20,15 +20,29 @@ export class BookText {
    * The index of the characters that are being displayed.
    * The fence between current and next characters.
    */
-  private charsDisplayed: number;
+  private charsDisplayed: number = 0;
 
   constructor(text: string, charsTyped: number) {
     this.text = text;
     this.charsTyped = charsTyped;
-    this.charsDisplayed = 0;
 
     // Initializes charsDisplayed
     this.getMoreChars(1000);
+  }
+
+  /**
+   * Gets the next page of words and updates charsTyped, charsDisplayed
+   */
+  nextPage() {
+    const prevLength = this.getDisplayedCharsLength();
+    this.charsTyped = this.charsDisplayed + 1;
+
+    // consume leading whitespace before getting the next page
+    while ([" ", "\n"].includes(this.text[this.charsTyped])) {
+      this.charsTyped++;
+    }
+
+    this.getMoreChars(prevLength * 1.5);
   }
 
   /**
@@ -71,7 +85,7 @@ export class BookText {
    * @returns The words that are less than or equal to the number of characters
    */
   getWordsByLength(characters: number) {
-    const words = this.text.split(" ");
+    const words = this.text.slice(this.charsTyped).split(" ");
     const displayedWords: string[] = [];
 
     const needsMoreWords = () =>

@@ -6,23 +6,23 @@ import usePageSizing from "../hooks/usePageSizing";
 import useForwardRef from "../hooks/useForwardRef";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTurnDown } from "@fortawesome/free-solid-svg-icons";
+import { useStore } from "../state/useStore";
 const { wordsContainer, wordDiv, correctChar, incorrectChar, nlChar, incorrectWord } = styles;
 
 const WordsContainer = forwardRef((
   {
     bookText,
-    typedChars,
   }: {
     bookText: BookText;
-    typedChars: string[];
   }, ref: ForwardedRef<HTMLDivElement>
 ) => {
   const forwardRef = useForwardRef(ref);
+  const { typedChars } = useStore();
+
+  const typedWords = typedChars.join("").split(" ");
 
   const text = usePageSizing(bookText, forwardRef);
-
   const words = text.split(" ");
-  const typedWords = typedChars.join("").split(" ");
 
   return (
     <div className={wordsContainer} ref={forwardRef}>
