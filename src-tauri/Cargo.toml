@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.1.0"
+version = "2.0.0"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
@@ -26,6 +26,7 @@ lazy_static = "1.4.0"
 mobi = "0.8.0"
 tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
+tauri-plugin-window-state = "2.0.0"
 
 
 [features]

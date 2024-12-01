@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npm run vite-build",
     "beforeDevCommand": "npm run dev",
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173"
@@ -42,17 +42,15 @@
   },
   "productName": "copytype",
   "mainBinaryName": "copytype",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "identifier": "com.profxwing.copytype",
   "plugins": {},
   "app": {
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
         "resizable": true,
         "title": "copytype",
-        "width": 800,
         "useHttpsScheme": true
       }
     ],
