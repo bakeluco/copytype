@@ -5,8 +5,10 @@ const { caret, animateCaret } = styles;
 
 const Caret = ({
   wordsContainerRef,
+  displayedText
 }: {
   wordsContainerRef: RefObject<HTMLDivElement>;
+  displayedText: string
 }) => {
   const { typedChars } = useStore();
 
@@ -20,18 +22,19 @@ const Caret = ({
     if (!wordsContainerRef.current) return;
     if (!caretRef.current) return;
 
-    const { left, top } = getCaretPosition(
+    const { left, top, display } = getCaretPosition(
       wordsContainerRef,
       caretRef,
       typedChars,
     );
 
     const style = {
+      display,
       transform: `translate(${left}px, ${top}px)`,
     };
 
     setStyle(style);
-  }, [wordsContainerRef, typedChars]);
+  }, [wordsContainerRef, typedChars, displayedText]);
 
   const caretClasses = [caret];
 
@@ -51,13 +54,15 @@ const getCaretPosition = (
 ): {
   left: number;
   top: number;
+  display: string;
 } => {
 
   // If either of the refs are not set, return a position that is offscreen.
   if (!wordsContainerRef.current || !caretRef.current) {
     return {
-      left: -999,
-      top: -999,
+      left: 0,
+      top: 0,
+      display: "none"
     };
   }
 
@@ -73,6 +78,7 @@ const getCaretPosition = (
     return {
       left: left + offset - caretWidth,
       top,
+      display: "block",
     };
   };
 
@@ -108,6 +114,13 @@ const getCaretPosition = (
   const lastTypedWord = getLastElement(typedWords);
   if (!lastTypedWord || lastTypedWord.length === 0) {
     const letter = Array.from(lastWordElement.children)[0];
+    if (!letter) {
+      return {
+        left: -999,
+        top: -999,
+        display: "none"
+      };
+    }
     return getPositionOfLetter(letter, 0, false);
   }
 

@@ -9,6 +9,7 @@ import WordsContainer from "../../components/WordsContainer/WordsContainer";
 import styles from "./Typing.module.scss";
 import useBookText from "../../components/hooks/useBookText";
 import useKeyHandler from "../../components/hooks/useKeyHandler";
+import usePageSizing from "../../components/hooks/usePageSizing";
 const { typingPage } = styles;
 
 
@@ -19,17 +20,18 @@ export const Typing = () => {
   const wordsContainerRef = useRef<HTMLDivElement>(null);
 
   const bookText = useBookText(backend, settings);
+  const { displayedText, nextPage } = usePageSizing(bookText, wordsContainerRef);
   useKeyHandler();
 
   return (
     <div className={typingPage}>
-      <PageNavigators />
+      <PageNavigators nextPage={nextPage} />
       <StatIndicators />
 
       {bookText.isSome() && (
         <>
-          <WordsContainer bookText={bookText.unwrap()} ref={wordsContainerRef} />
-          <Caret wordsContainerRef={wordsContainerRef} />
+          <WordsContainer displayedText={displayedText} ref={wordsContainerRef} />
+          <Caret wordsContainerRef={wordsContainerRef} displayedText={displayedText} />
         </>
       )}
     </div>

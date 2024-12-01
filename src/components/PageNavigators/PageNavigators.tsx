@@ -1,26 +1,31 @@
 import styles from "./PageNavigators.module.scss";
 const { pageSelectors, pageNavigator, pageButtons } = styles;
 
-const PageNavigators = () => {
+const PageNavigators = ({
+  nextPage
+}: {
+  nextPage: () => void
+}) => {
   return (
     <div className={pageSelectors}>
       <PageNavigator text="<<" onClick={() => {
         console.log("Previous chapter.");
-      }}/>
+      }} />
 
       <div className={pageButtons}>
         <PageNavigator text="<" onClick={() => {
           console.log("Previous page.");
-        }}/>
+        }} />
 
         <PageNavigator text=">" onClick={() => {
           console.log("Next page.");
-        }}/>
+          nextPage();
+        }} />
       </div>
 
       <PageNavigator text=">>" onClick={() => {
         console.log("Next chapter.");
-      }}/>
+      }} />
     </div>
   );
 };

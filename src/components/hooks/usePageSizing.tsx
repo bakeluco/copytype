@@ -1,10 +1,11 @@
 import { RefObject, useCallback, useEffect, useState } from "react";
 import { BookText } from "../bookText";
 import { useStore } from "../state/useStore";
+import { Optional } from "../options";
 
-const usePageSizing = (bookText: BookText, ref: RefObject<HTMLDivElement>) => {
+const usePageSizing = (bookText: Optional<BookText>, ref: RefObject<HTMLDivElement>) => {
   const [loadingPage, setLoadingPage] = useState(true);
-  const [displayedWords, setDisplayedWords] = useState(bookText.getDisplayedWords());
+  const [displayedText, setDisplayedWords] = useState("");
   const { typedChars, setTypedChars } = useStore();
 
   const wordsTyped = typedChars.join("").split(" ").length;
@@ -14,9 +15,10 @@ const usePageSizing = (bookText: BookText, ref: RefObject<HTMLDivElement>) => {
     if (
       loadingPage === false
       || ref.current === null
+      || bookText.isNone()
     ) return;
 
-    const { displayedWords, stillLoading } = bookText.updateDisplay(ref);
+    const { displayedWords, stillLoading } = bookText.unwrap().updateDisplay(ref);
 
     setLoadingPage(stillLoading);
     setDisplayedWords(displayedWords.slice());
@@ -40,19 +42,32 @@ const usePageSizing = (bookText: BookText, ref: RefObject<HTMLDivElement>) => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, [initWindow, bookText, loadingPage, displayedWords]);
+  }, [initWindow, bookText, loadingPage, displayedText]);
+
+
+  const nextPage = useCallback(() => {
+    if (bookText.isNone()) {
+      return;
+    }
+
+    bookText.unwrap().nextPage();
+    setLoadingPage(true);
+    setTypedChars([]);
+  }, [bookText, setTypedChars]);
 
   // gets the next page of text if you've typed a whole page
   useEffect(() => {
-    const pageLength = bookText.getDisplayedWords().split(" ").length;
-    if (wordsTyped > pageLength) {
-      bookText.nextPage();
-      setLoadingPage(true);
-      setTypedChars([]);
+    if (bookText.isNone()) {
+      return;
     }
-  }, [initWindow, bookText, wordsTyped, setTypedChars]);
 
-  return displayedWords;
+    const pageLength = bookText.unwrap().getDisplayedWords().split(" ").length;
+    if (wordsTyped > pageLength) {
+      nextPage();
+    }
+  }, [initWindow, bookText, wordsTyped, setTypedChars, nextPage]);
+
+  return { displayedText, nextPage };
 };
 
 export default usePageSizing;
