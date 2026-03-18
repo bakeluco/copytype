@@ -160,12 +160,41 @@
             >>
           </span>
         </div>
+        <div
+          tabindex="0"
+          style="margin-left: 16px; margin-right: 4px;"
+          id="skip-char"
+          title="Skip character (Ctrl+→)"
+        >
+          <i class="fas fa-forward-step" style="transform: scale(0.65);"></i>
+        </div>
+        <div
+          tabindex="0"
+          style="margin-left: 16px; margin-right: 16px;"
+          id="zoom-in"
+          title="Zoom in (fewer words)"
+        >
+          <i class="fas fa-search-plus" style="transform: scale(0.65);"></i>
+        </div>
+        <div 
+          tabindex="0" 
+          style=""
+          id="zoom-out" 
+          title="Zoom out (more words)"
+        >
+          <i class="fas fa-search-minus" style="transform: scale(0.65);"></i>
+        </div>
       </div>
 
       <table class="typing-stats" class="hidden">
         <td id="wpm-counter" class="hidden"></td>
         <td id="acc-counter" class="hidden"></td>
+        <td id="book-page-counter" class="hidden" style="white-space: nowrap; transform: scale(0.75);"></td>
+        <td id="chapter-page-counter" class="hidden" style="white-space: nowrap; transform: scale(0.75); padding-left: 128px;"></td>
+        <td id="book-pct-inline" class="hidden" style="white-space: nowrap; transform: scale(0.75); padding-left: 128px;"></td>
+        <td id="chapter-pct-inline" class="hidden" style="white-space: nowrap; transform: scale(0.75);"></td>
       </table>
+      <div id="past-words"></div>
       <div id="words"></div>
 
       <div id="pause-menu" class="hidden disable-select">

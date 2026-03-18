@@ -22,8 +22,11 @@ import {
   prevPage,
   prevChapter,
   nextPage,
-  nextChapter
+  nextChapter,
+  zoomIn,
+  zoomOut
 } from './typing/display.js';
+import { skipChar, skipToWord } from './typing/test.js';
 
 $("#app-header").click(continueTyping);
 $("#keyboard-header").parents('.text-button').first().click(continueTyping);
@@ -78,6 +81,29 @@ $("#page-next").click(function () {
 
 $("#chap-next").click(function () {
   nextChapter();
+  $(this).blur();
+});
+
+$("#skip-char").click(function () {
+  skipChar();
+  $(this).blur();
+});
+
+$("#words, #past-words").on("click", function (e) {
+  if (!e.ctrlKey) return;
+  const wordEl = $(e.target as HTMLElement).closest(".word");
+  if (!wordEl.length) return;
+  const wordIndex = $("#words").find(".word").index(wordEl);
+  if (wordIndex >= 0) skipToWord(wordIndex);
+});
+
+$("#zoom-in").click(function () {
+  zoomIn();
+  $(this).blur();
+});
+
+$("#zoom-out").click(function () {
+  zoomOut();
   $(this).blur();
 });
 

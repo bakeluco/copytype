@@ -10,6 +10,100 @@ export function setCurrentPage(newPage: number) {
   currentPage = newPage;
 }
 
+// Zoom levels: 1 = default view, 5 = whole chapter (5 levels total)
+function zoomLevel(): number {
+  return settings.zoomLevel ?? 1;
+}
+
+function isChapterZoom(): boolean {
+  return zoomLevel() >= 5;
+}
+
+function getZoomWordCount(): number {
+  const counts = [250, 500, 1000, 2000, Number.MAX_SAFE_INTEGER];
+  return counts[Math.min(zoomLevel() - 1, counts.length - 1)];
+}
+
+function applyZoomFont() {
+  const sizes = [2.3, 1.8, 1.3, 0.9, 0.6];
+  const idx = Math.min(zoomLevel() - 1, sizes.length - 1);
+  const size = zoomLevel() === 1 ? settings.fontSize : sizes[idx];
+  $(":root").css("--font-size", size + "rem");
+}
+
+export function zoomIn() {
+  if (zoomLevel() > 1) {
+    settings.zoomLevel--;
+    window.electron.saveSettings(settings);
+    nextWordSet(true);
+  }
+}
+
+export function zoomOut() {
+  if (zoomLevel() < 5) {
+    settings.zoomLevel++;
+    window.electron.saveSettings(settings);
+    nextWordSet(true);
+  }
+}
+
+// Cache of word counts per chapter index (cleared when book changes)
+var chapterWordCountCache: number[] = [];
+var lastCachedBook = "";
+
+function getChapterWordCount(i: number): number {
+  // Always use live fullText for the current chapter (it may have transforms applied)
+  if (i === currentBookStats.chapter) return fullText.length;
+
+  // Clear cache when a different book is loaded
+  const bookName = currentBookStats?.bookName ?? "";
+  if (bookName !== lastCachedBook) {
+    chapterWordCountCache = [];
+    lastCachedBook = bookName;
+  }
+
+  if (chapterWordCountCache[i] !== undefined) return chapterWordCountCache[i];
+  const words = window.electron.getDataFromJSON(currentBookData.textPath[i]);
+  chapterWordCountCache[i] = words.length;
+  return chapterWordCountCache[i];
+}
+
+function updatePageCounters() {
+  if (!currentBookStats || !currentBookData?.textPath || !fullText?.length) return;
+
+  // Fixed page size for counting — independent of zoom so counters are always meaningful
+  const PAGE_SIZE = 250;
+  const pagesFor = (n: number) => Math.max(1, Math.ceil(n / PAGE_SIZE));
+
+  // Include in-progress typing so counters update live as the user types
+  const wordsTypedInChapter = currentBookStats.typedPos + getWordsTyped().length;
+
+  const chapCurrent = Math.floor(wordsTypedInChapter / PAGE_SIZE) + 1;
+  const chapTotal = pagesFor(fullText.length);
+  const chapPct = Math.min(100, Math.round(wordsTypedInChapter / fullText.length * 100));
+  $("#chapter-page-counter").text(`ch. ${chapCurrent}/${chapTotal}`);
+  $("#chapter-pct-inline").text(`ch. ${chapPct}%`);
+
+  let bookTypedWords = wordsTypedInChapter;
+  let bookTotalWords = fullText.length;
+  let bookCurrent = chapCurrent;
+  let bookTotal = chapTotal;
+  for (let i = 0; i < currentBookData.textPath.length; i++) {
+    if (i === currentBookStats.chapter) continue;
+    const wc = getChapterWordCount(i);
+    const pages = pagesFor(wc);
+    bookTotalWords += wc;
+    bookTotal += pages;
+    if (i < currentBookStats.chapter) {
+      bookTypedWords += wc;
+      bookCurrent += pages;
+    }
+  }
+  const bookPct = Math.min(100, Math.round(bookTypedWords / bookTotalWords * 100));
+  $("#book-page-counter").text(`bk. ${bookCurrent}/${bookTotal}`);
+  $("#book-pct-inline").text(`bk. ${bookPct}%`);
+}
+
 var pageLengths: {
   [key: number]: {
     chapter: number,
@@ -34,8 +128,9 @@ $(window).resize(function () {
   }
 });
 
-// Updates the caret position 
+// Updates the caret position
 export function updateCaret(init = false) {
+  updatePageCounters();
   // Handle caret animation
   if (typed.length == 0 && !$('#caret').hasClass('animate-caret')) {
     $('#caret').addClass("animate-caret");
@@ -110,6 +205,11 @@ export function updateCaret(init = false) {
         top: caretPosY
       }, duration);
     }
+
+    // In chapter zoom the page scrolls, so keep the caret visible
+    if (isChapterZoom()) {
+      document.getElementById('caret')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
   }
 }
 
@@ -119,6 +219,33 @@ function hideWords() {
 
 function showWords() {
   $("#words").css("height", "auto");
+}
+
+function buildWordElements(container: JQuery, words: string[]) {
+  for (const word of words) {
+    container.append(`<div class="word"></div>`);
+    const currentWord = container.children().last()[0];
+    for (const char of word) {
+      const letterElem = document.createElement("letter");
+      letterElem.setAttribute('char', char);
+      if (char == "\n") {
+        letterElem.classList.add("nlChar");
+        letterElem.innerHTML = `<i class="fas fa-angle-down"></i>`;
+        $(currentWord).append(letterElem);
+        container.append("<br>");
+      } else {
+        letterElem.innerHTML = char;
+      }
+      $(currentWord).append(letterElem);
+    }
+  }
+}
+
+function renderPastWords() {
+  $("#past-words").empty();
+  if (isChapterZoom() && currentBookStats.typedPos > 0) {
+    buildWordElements($("#past-words"), fullText.slice(0, currentBookStats.typedPos));
+  }
 }
 
 function showChapterLabel() {
@@ -197,7 +324,8 @@ function prevWordSet() {
     // Load new page
   } else {
     const startPos = currentBookStats.typedPos;
-    currentBookStats.typedPos -= settings.wordCount;
+    const wordCount = isChapterZoom() ? fullText.length : getZoomWordCount();
+    currentBookStats.typedPos -= wordCount;
     if (currentBookStats.typedPos < 0) currentBookStats.typedPos = 0;
     setText(fullText.slice(currentBookStats.typedPos));
     text.splice(startPos - currentBookStats.typedPos);
@@ -243,14 +371,16 @@ function prevWordSet() {
 
   // Load page
   $("#caret").ready(function () {
-    // Remove the words that aren't on the screen 
-    while ($("#words .word:last").position().top > $(window).height() - 160) {
-      $("#words .word").first().remove();
-      text.shift();
-      if ($("#words").children().first().prop("nodeName") == "BR") {
-        $("#words").children().first().remove();
+    if (!isChapterZoom()) {
+      // Remove the words that aren't on the screen
+      while ($("#words .word:last").position().top > $(window).height() - 160) {
+        $("#words .word").first().remove();
+        text.shift();
+        if ($("#words").children().first().prop("nodeName") == "BR") {
+          $("#words").children().first().remove();
+        }
+        currentBookStats.typedPos++;
       }
-      currentBookStats.typedPos++;
     }
 
     // Save current page
@@ -258,6 +388,7 @@ function prevWordSet() {
       setPageLengths();
     }
 
+    updatePageCounters();
     updateCaret(true);
     showWords();
   });
@@ -275,12 +406,17 @@ export function nextWordSet(keepCurrent = false) {
   $("#words").toggleClass("colorfulMode", settings.colorfulMode);
   $("#wpm-counter").toggleClass("hidden", !settings.showLiveWpm);
   $("#acc-counter").toggleClass("hidden", !settings.showLiveAcc);
+  $("#chapter-page-counter").removeClass("hidden");
+  $("#book-page-counter").removeClass("hidden");
+  $("#chapter-pct-inline").removeClass("hidden");
+  $("#book-pct-inline").removeClass("hidden");
   $("#page-prev").toggleClass("hidden", !settings.pageNavigation);
   $("#page-next").toggleClass("hidden", !settings.pageNavigation);
   $("#chap-prev").toggleClass("hidden", !settings.chapterNavigation);
   $("#chap-next").toggleClass("hidden", !settings.chapterNavigation);
   $("#pause-menu").toggleClass("hidden", !settings.pausePlayButton);
-  $(":root").css("--font-size", settings.fontSize + "rem");
+  $("#typing").toggleClass("chapter-zoom", isChapterZoom());
+  applyZoomFont();
   if (settings.showPageLabel == "always on") {
     $("#chapter-label").removeClass("hide-chapter-label");
   }
@@ -342,7 +478,9 @@ export function nextWordSet(keepCurrent = false) {
     // Load page
   } else {
     setText(fullText.slice(currentBookStats.typedPos))
-    text.splice(settings.wordCount);
+    if (!isChapterZoom()) {
+      text.splice(getZoomWordCount());
+    }
   }
 
   // Replace accents in lazy mode
@@ -362,27 +500,8 @@ export function nextWordSet(keepCurrent = false) {
   // Add words to screen
   hideWords();
   $("#words").empty();
-  for (const word of text) {
-    $("#words").append(`<div class="word"></div>`);
-    const children = $("#words").children();
-    const currentWord = children[children.length - 1];
-
-    for (const char of word) {
-      const letterElem = document.createElement("letter");
-      letterElem.setAttribute('char', char);
-
-
-      if (char == "\n") {
-        letterElem.classList.add("nlChar");
-        letterElem.innerHTML = `<i class="fas fa-angle-down"></i>`
-        $(currentWord).append(letterElem);
-        $("#words").append("<br>");
-      } else {
-        letterElem.innerHTML = char;
-      }
-      $(currentWord).append(letterElem);
-    }
-  }
+  renderPastWords();
+  buildWordElements($("#words"), text);
 
   // Styles words that are already typed
   if (keepCurrent && typed.length > 0) {
@@ -402,9 +521,11 @@ export function nextWordSet(keepCurrent = false) {
 
   $("#words").append(`<div id='caret' class='${settings.caretStyle}'></div>`);
 
-  // Once the list of 100 words has loaded, remove the words that aren't on the screen 
+  // Once the list of words has loaded, remove the words that aren't on the screen
   $("#caret").ready(function () {
-    removeWordsOffScreen();
+    if (!isChapterZoom()) {
+      removeWordsOffScreen();
+    }
 
     const wordsTyped = getWordsTyped();
     if (wordsTyped.length >= text.length) {
@@ -416,6 +537,7 @@ export function nextWordSet(keepCurrent = false) {
       setPageLengths();
     }
 
+    updatePageCounters();
     updateCaret(true);
     showWords();
   });
