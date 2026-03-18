@@ -28,7 +28,8 @@ export class Settings {
   chapterNavigation = true;
   pausePlayButton = true;
 
-  wordCount = 250; // todo: how many words are loaded, would be great if this was automatic 
+  wordCount = 250; // todo: how many words are loaded, would be great if this was automatic
+  zoomLevel = 5; // 1 (default) to 5 (whole chapter)
   currentTheme = 'serika_dark';
   themeType = 'preset'; //preset, custom
   savedCustomThemes: CustomTheme[] = [];

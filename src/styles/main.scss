@@ -75,6 +75,16 @@ body {
   height: 100%;
 }
 
+#typing.chapter-zoom {
+  overflow: visible;
+  height: auto;
+}
+
+#middle:has(#typing.chapter-zoom) {
+  height: auto;
+}
+
+
 @keyframes caretFlashSmooth {
 
   0%,
@@ -88,10 +98,11 @@ body {
 }
 
 #caret {
-  height: 2rem;
+  font-size: var(--font-size);
+  height: 0.87em;
   background: var(--caret-color);
   position: absolute;
-  width: 2.5px;
+  width: 0.08em;
   border-radius: 0.25rem;
   transform: scale(1.45);
   transform-origin: top left;
@@ -344,6 +355,13 @@ body {
   font-size: 27px;
   color: var(--main-color);
   width: 150px;
+}
+
+#chapter-page-counter,
+#book-page-counter {
+  width: auto;
+  min-width: 180px;
+  opacity: 0.7;
 }
 
 
@@ -1048,6 +1066,23 @@ input[type=number]::-webkit-outer-spin-button {
 #words {
   font-size: var(--font-size);
   clear: both;
+}
+
+#past-words {
+  font-size: var(--font-size);
+  clear: both;
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+
+  .word {
+    display: inline-block;
+    margin: calc(var(--font-size) * 0.57 / 2.3);
+  }
+
+  letter {
+    color: var(--text-color);
+  }
 }
 
 .pageSettings .section.fullWidth {

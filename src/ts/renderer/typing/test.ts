@@ -382,6 +382,12 @@ function keyDown(e: KeyboardEvent) {
     // -------------------------------------------------------------
   }
   if (text.length > 0 && !$("#typing").hasClass("hidden")) {
+    if (e.key === "ArrowRight" && e.ctrlKey) {
+      e.preventDefault();
+      skipChar();
+      return;
+    }
+
     if (!$("#words").hasClass("hidden") && typed.length > 0) {
       const typedAsWords = getWordsTyped();
       const currentWordLength = typedAsWords[typedAsWords.length - 1].length;
@@ -431,6 +437,57 @@ function keyDown(e: KeyboardEvent) {
       }
     }
   }
+}
+
+export function skipToWord(wordIndex: number) {
+  if (text.length === 0 || $("#typing").hasClass("hidden")) return;
+  if (wordIndex < 0 || wordIndex >= text.length) return;
+
+  const newTyped: any[] = [];
+  for (let i = 0; i < wordIndex; i++) {
+    for (const ch of text[i]) newTyped.push(ch as any);
+    newTyped.push(" " as any);
+  }
+  setTyped(newTyped);
+
+  const wordEls = $("#words").find(".word");
+  for (let i = 0; i < wordIndex; i++) {
+    wordEls.eq(i).children().addClass("skipped-letter");
+  }
+
+  updateCaret();
+}
+
+export function skipChar() {
+  if (text.length === 0 || $("#typing").hasClass("hidden")) return;
+
+  const typedWords = getWordsTyped();
+  const wordIndex = typedWords.length - 1;
+  const charIndex = typedWords[wordIndex].length;
+
+  if (wordIndex >= text.length) return;
+
+  const correctWord = text[wordIndex];
+
+  if (charIndex >= correctWord.length) {
+    // At end of word — advance to next word like pressing space
+    typed.push(" " as any);
+  } else {
+    // Inject the correct character and mark it as skipped
+    const correctChar = correctWord[charIndex];
+    typed.push(correctChar as any);
+    styleWord(wordIndex, charIndex);
+    $("#words").find(".word").eq(wordIndex).children().eq(charIndex).addClass("skipped-letter");
+  }
+
+  // Advance page if we just completed the last word
+  const newWords = getWordsTyped();
+  if (newWords.length > text.length) {
+    nextWordSet();
+    return;
+  }
+
+  updateCaret();
 }
 
 export function getWordsTyped() {
